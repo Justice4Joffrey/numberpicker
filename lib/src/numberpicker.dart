@@ -85,10 +85,12 @@ class NumberPicker extends StatefulWidget {
 
 class _NumberPickerState extends State<NumberPicker> {
   late ScrollController _scrollController;
+  late int centerValue;
 
   @override
   void initState() {
     super.initState();
+    centerValue = widget.value;
     final initialOffset =
         (widget.value - widget.minValue) ~/ widget.step * itemExtent;
     if (widget.infiniteLoop) {
@@ -110,8 +112,10 @@ class _NumberPickerState extends State<NumberPicker> {
     final intValueInTheMiddle =
         _intValueFromIndex(indexOfMiddleElement + additionalItemsOnEachSide);
 
-    if (widget.value != intValueInTheMiddle) {
-      widget.onChanged(intValueInTheMiddle);
+    if (centerValue != intValueInTheMiddle) {
+      setState(() {
+        centerValue = intValueInTheMiddle;
+      });
       if (widget.haptics) {
         HapticFeedback.selectionClick();
       }
@@ -239,7 +243,7 @@ class _NumberPickerState extends State<NumberPicker> {
 
   void _maybeCenterValue() {
     if (_scrollController.hasClients && !isScrolling) {
-      int diff = widget.value - widget.minValue;
+      int diff = centerValue - widget.minValue;
       int index = diff ~/ widget.step;
       if (widget.infiniteLoop) {
         final offset = _scrollController.offset + 0.5 * itemExtent;
@@ -250,7 +254,7 @@ class _NumberPickerState extends State<NumberPicker> {
         index * itemExtent,
         duration: Duration(milliseconds: 300),
         curve: Curves.easeOutCubic,
-      );
+      ).then((_) => widget.onChanged(centerValue));
     }
   }
 }
